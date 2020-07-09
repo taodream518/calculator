@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Vue Calculator</title>
+    <link rel="stylesheet" href="index.css" />
+  </head>
+  <body>
+    <div id="app">
+      <div class="calculator">
+        <!-- 结果 -->
+        <div class="result" style="grid-area: result">{{ equation }}</div>
+        <!-- 0-9数字按钮 -->
+        <button style="grid-area: number-1" @click="append(1)">1</button>
+        <button style="grid-area: number-2" @click="append(2)">2</button>
+        <button style="grid-area: number-3" @click="append(3)">3</button>
+        <button style="grid-area: number-4" @click="append(4)">4</button>
+        <button style="grid-area: number-5" @click="append(5)">5</button>
+        <button style="grid-area: number-6" @click="append(6)">6</button>
+        <button style="grid-area: number-7" @click="append(7)">7</button>
+        <button style="grid-area: number-8" @click="append(8)">8</button>
+        <button style="grid-area: number-9" @click="append(9)">9</button>
+        <button style="grid-area: number-0" @click="append(0)">0</button>
+
+        <!-- 八个功能按钮 -->
+        <button style="grid-area: ac" @click="clear">AC</button>
+        <button style="grid-area: plus-minus" @click="calculateToggle">
+          ±
+        </button>
+        <button style="grid-area: percent" @click="calculatePercent">%</button>
+        <button style="grid-area: add" @click="append('+')">+</button>
+        <button style="grid-area: subtract" @click="append('-')">-</button>
+        <button style="grid-area: multiply" @click="append('×')">×</button>
+        <button style="grid-area: divide" @click="append('÷')">÷</button>
+        <button style="grid-area: equal" @click="calculate">=</button>
+
+        <!-- 小数点按钮 -->
+        <button style="grid-area: dot" @click="append('.')">.</button>
+      </div>
+    </div>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.6.11/vue.min.js"></script>
+
+    <script>
+      new Vue({
+        el: "#app",
+        data: {
+          equation: "0",
+          // 是否已经输入小数点
+          isDecimalAdded: false,
+          // 是否已经输入功能符合 + - x % ...
+          isOperatorAdded: false,
+          // 是否已经开始输入数字
+          isStarted: false
+        },
+        methods: {
+          // 判断是否是运算符
+          isOperator(character) {
+            return ["+", "-", "×", "÷"].indexOf(character) > -1;
+          },
+          // 点击小数点或数字触发函数
+          append(character) {
+            // 开始运算
+            if (this.equation === "0" && !this.isOperator(character)) {
+              // 输入小数点 .
+              if (character === ".") {
+                this.equation += "" + character; // 追加小数点 0.
+                this.isDecimalAdded = true;
+              } else {
+                this.equation = "" + character;
+              }
+
+              this.isStarted = true;
+              return;
+            }
+
+            // 输入的非运算符 => 数字|小数点
+            if (!this.isOperator(character)) {
+              // 小数点只能输入一个
+              if (character === "." && this.isDecimalAdded) {
+                return;
+              }
+
+              // 输入小数点时
+              if (character === ".") {
+                this.isDecimalAdded = true;
+                this.isOperatorAdded = true;
+              } else {
+                this.isOperatorAdded = false;
+              }
+
+              this.equation += "" + character;
+            }
+
+            // 输入的是运算符
+            if (this.isOperator(character) && !this.isOperatorAdded) {
+              if (this.equation[this.equation.length - 1] === ".") {
+                return;
+              }
+              this.equation += "" + character;
+              this.isDecimalAdded = false;
+              this.isOperatorAdded = true;
+            }
+          },
+          // 点击 = 号
+          calculate() {
+            // 最后一个是运算符号或者是小数点时
+            let lastChar = this.equation[this.equation.length - 1];
+            if (lastChar === "." || this.isOperator(lastChar)) {
+              return;
+            }
+
+            let result = this.equation.replace(/×/g, "*").replace(/÷/g, "/");
+            this.equation = parseFloat(eval(result).toFixed(5)).toString();
+
+            this.isDecimalAdded = false;
+            this.isOperatorAdded = false;
+          },
+          // 点击 + | - （正负）
+          calculateToggle() {
+            if (this.isOperatorAdded || !this.isStarted) {
+              return;
+            }
+
+            this.equation = this.equation + "* -1";
+            this.calculate();
+          },
+          // 点击百分比 %
+          calculatePercent() {
+            // 刚输入运算符号Operator或者未开始使用计算器时
+            if (this.isOperatorAdded || !this.isStarted) {
+              return;
+            }
+            this.equation = this.equation + "* 0.01";
+            this.calculate();
+          },
+          // 点击AC符号
+          clear() {
+            this.equation = "0";
+            this.isDecimalAdded = false;
+            this.isOperatorAdded = false;
+            this.isStarted = false;
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
